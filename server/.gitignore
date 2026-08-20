@@ -34,3 +34,9 @@ ehthumbs.db
 
 # Package-lock
 package-lock.json
+
+/src/generated/prisma
+
+.agents/
+.claude/skills/
+.windsurf/skills/
