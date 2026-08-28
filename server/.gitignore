@@ -40,3 +40,4 @@ package-lock.json
 .agents/
 .claude/skills/
 .windsurf/skills/
+/src/generated/prisma

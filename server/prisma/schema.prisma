@@ -1,7 +1,8 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +11,108 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  name String
+  passwordHash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  workspaceMembers WorkspaceMember[]
+  comments Comment[]
+  createdTasks Task[] @relation("CreatedTasks")
+  assignedTasks Task[] @relation("AssignedTasks")
+}
+
+model Workspace {
+  id Int @id @default(autoincrement())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  workspaceMembers WorkspaceMember[]
+  projects Project[]
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  REJECT
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model WorkspaceMember {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId Int
+  role WorkspaceRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+model Project {
+  id Int @id @default(autoincrement())
+  name String
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId Int
+  tasks Task[]
+  @@index([workspaceId])
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  status TaskStatus
+  priority TaskPriority
+  dueDate DateTime?
+  project Project @relation(fields: [projectId], references: [id])
+  projectId Int
+  comments Comment[]
+  assignee User? @relation("CreatedTasks", fields: [assigneeId], references: [id])
+  creator User @relation("AssignedTasks", fields: [creatorId], references: [id])
+  assigneeId Int
+  creatorId Int
+  @@index([projectId])
+  @@index([assigneeId])
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  task Task @relation(fields: [taskId], references: [id])
+  taskId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  content String
+  @@index([taskId])
 }
