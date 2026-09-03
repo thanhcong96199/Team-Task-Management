@@ -7,3 +7,6 @@ sudo -u postgres psql
 
 # Để xem db giao diện trưc quan hơn thì dùng prisma studio
 npx prisma studio
+
+# Chay app
+npm run dev

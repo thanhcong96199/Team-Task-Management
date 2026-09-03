@@ -1,14 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
+import app from "./app.js";
 
-const app: Express = express();
-
-app.use(express.json());
-
-app.get("/health", (req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-  });
-});
 
 const PORT = 3000;
 
