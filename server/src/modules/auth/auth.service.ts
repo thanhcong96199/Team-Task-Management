@@ -12,11 +12,13 @@ export interface UserRequest {
 export const authService = {
     async signUpService (userInfor: UserRequest) {
         // check email is exist
-        const findUser = await prisma.user.find({
-            email: userInfor.email
+        const findUser = await prisma.user.findUnique({
+            where: {
+                email: userInfor.email
+            }
         });
         if (findUser) {
-            throw("User is exist");
+            throw();
         }
         // save user into db
         const saltRounds = 10;

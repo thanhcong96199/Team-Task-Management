@@ -5,8 +5,8 @@ const app: Express = express();
 
 app.use(express.json());
 
-app.use("/api/v1/login", authRouter);
-app.use("/api/v1/register", authRouter);
+// app.use("/api/v1/login", authRouter);
+app.use("/api/v1/auth", authRouter);
 
 
 export default app;
