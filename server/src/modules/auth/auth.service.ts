@@ -9,6 +9,20 @@ export interface UserRequest {
     password: string;
 }
 
+interface ErrorDefine {
+    code: number;
+    message: string;
+}
+
+class AppError {
+    code;
+    message;
+    constructor({ code, message }: ErrorDefine) {
+        this.code = code;
+        this.message = message;
+    }
+}
+
 export const authService = {
     async signUpService (userInfor: UserRequest) {
         // check email is exist
@@ -18,7 +32,10 @@ export const authService = {
             }
         });
         if (findUser) {
-            throw();
+            throw(new AppError({
+                code: 409,
+                message: "Conflict user"
+            }));
         }
         // save user into db
         const saltRounds = 10;

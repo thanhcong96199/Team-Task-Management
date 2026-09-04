@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { authService } from "./auth.service.js";
+import { errorHandler } from "../../middlewares/error.middleware.js";
 
 export const signUp = async (
     req: Request,
@@ -18,7 +19,9 @@ export const signUp = async (
             data: userInfor,
         })
     } catch (error) {
-        next(error)
+        console.log("===error===", error)
+        // next(error)
+        errorHandler(error, req, res)
     }
 
 }
