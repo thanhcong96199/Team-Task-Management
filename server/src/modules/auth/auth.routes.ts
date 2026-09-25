@@ -1,9 +1,11 @@
-import { Router, type Request, type Response } from "express";
-import { signUp } from "./auth.controller.js";
+import { Router } from "express";
+import { login, signUp } from "./auth.controller.js";
+import { validateBody } from "../../middlewares/validate.middleware.js";
+import { loginSchema, registerSchema } from "./auth.validation.js";
 
 const authRouter = Router();
 
-authRouter.post("/register", signUp);
-// authRouter.post("/login", )
+authRouter.post("/register", validateBody(registerSchema), signUp);
+authRouter.post("/login", validateBody(loginSchema), login);
 
 export default authRouter;

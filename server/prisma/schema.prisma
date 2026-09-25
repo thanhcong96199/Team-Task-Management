@@ -76,8 +76,10 @@ model Project {
   description String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   workspaceId Int
+  boards Board[]
   @@index([workspaceId])
 }
 
@@ -86,8 +88,12 @@ model Board {
   title String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
   active Boolean @default(true)
   tasks Task[]
+  project Project @relation(fields: [projectId], references: [id])
+  projectId Int
+  @@index([projectId])
 }
 
 model Task {

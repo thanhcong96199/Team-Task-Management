@@ -1,27 +1,32 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 import { authService } from "./auth.service.js";
-import { errorHandler } from "../../middlewares/error.middleware.js";
 
-export const signUp = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
-    try {
-        const userParam = {
-            name: req.body?.name,
-            email: req.body?.email,
-            password: req.body?.password
-        }
-        const userInfor = await authService.signUpService(userParam);
-
-        return res.status(200).json({
-            data: userInfor,
-        })
-    } catch (error) {
-        console.log("===error===", error)
-        // next(error)
-        errorHandler(error, req, res)
+// Express 5 forwards errors thrown in async handlers to errorHandler automatically
+export const signUp = async (req: Request, res: Response) => {
+    const userParam = {
+        name: req.body?.data?.name,
+        email: req.body?.data?.email,
+        password: req.body?.data?.password
     }
+    const userInfor = await authService.signUpService(userParam);
 
-}
+    if (!userInfor) return res.status(400).json({ message: 'Something error'});
+
+    return res.status(201).json({
+        data: userInfor,
+    })
+};
+
+export const login = async (req: Request, res: Response) => {
+    const userParam = {
+        email: req.body?.data?.email,
+        password: req.body?.data?.password
+    }
+    const result = await authService.loginService(userParam);
+    if (!result) return res.status(400).json({ message: 'Email or Password invalid'});
+
+    return res.status(200).json({
+        data: result,
+    })
+
+};

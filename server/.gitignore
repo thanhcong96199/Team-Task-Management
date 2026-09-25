@@ -32,9 +32,6 @@ yarn-error.log*
 Thumbs.db
 ehthumbs.db
 
-# Package-lock
-package-lock.json
-
 /src/generated/prisma
 
 .agents/
