@@ -1,5 +1,6 @@
 import { prisma } from "../../config/database.js";
 import { AppError } from "../../utils/app-error.js";
+import bcrypt from 'bcrypt';
 import z from "zod";
 import jwt from 'jsonwebtoken';
 import type { loginSchema, registerSchema } from "./auth.validation.js";
@@ -20,9 +21,9 @@ export const authService = {
             throw new AppError(409, "Invalid email or password");
         }
         // save user into db
-        const secret = env.JWT_ACCESS_SECRET;
+        const salt = 10;
         const expires = env.JWT_ACCESS_EXPIRES_IN;
-        const hashedPassword = jwt.sign({ data: userInfor?.password }, secret, { expiresIn: expires, algorithm: 'RS256'  });
+        const hashedPassword = await bcrypt.hash(userInfor.password, salt);
         const newUser = await prisma.user.create({
             data: {
                 email: userInfor.email,
@@ -47,7 +48,7 @@ export const authService = {
             throw new AppError(409, "Invalid email or password");
         }
 
-        const decodedPass = await jwt.verify(password, findUser?.passwordHash);
+        const decodedPass = await bcrypt.compare(password, findUser?.passwordHash);
         if (decodedPass) {
             return {
                 accessToken: findUser?.passwordHash,
