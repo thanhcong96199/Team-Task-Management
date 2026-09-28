@@ -1,16 +1,15 @@
 import type { Request, Response } from "express";
 import { authService } from "./auth.service.js";
+import { AppError } from "../../utils/app-error.js";
 
 // Express 5 forwards errors thrown in async handlers to errorHandler automatically
 export const signUp = async (req: Request, res: Response) => {
     const userParam = {
-        name: req.body?.data?.name,
-        email: req.body?.data?.email,
-        password: req.body?.data?.password
+        name: req.body?.name,
+        email: req.body?.email,
+        password: req.body?.password
     }
     const userInfor = await authService.signUpService(userParam);
-
-    if (!userInfor) return res.status(400).json({ message: 'Something error'});
 
     return res.status(201).json({
         data: userInfor,
@@ -19,14 +18,25 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     const userParam = {
-        email: req.body?.data?.email,
-        password: req.body?.data?.password
+        email: req.body?.email,
+        password: req.body?.password
     }
     const result = await authService.loginService(userParam);
-    if (!result) return res.status(400).json({ message: 'Email or Password invalid'});
 
     return res.status(200).json({
         data: result,
     })
 
 };
+
+export const getMe = async (req: Request, res: Response) => {
+    // req.user is set by authenticate; this guard only exists if the route forgets that middleware
+    if (!req.user) {
+        throw new AppError(401, "Unauthorized");
+    }
+    const result = await authService.getInfor(req.user.id);
+
+    return res.status(200).json({
+        data: result
+    })
+}

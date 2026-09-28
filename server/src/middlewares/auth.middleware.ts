@@ -1,26 +1,32 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
 import { env } from "../config/env.js";
+import { AppError } from "../utils/app-error.js";
+import { tokenPayloadSchema } from "../modules/auth/auth.validation.js";
 
+const BEARER_REGEX = /^Bearer\s+(\S+)$/;
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-        return res.status(401).json({ message: 'Chua dang nhap'});
+// Errors thrown here are forwarded to errorHandler, so every 401 has the same response format
+export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
+    const token = req.headers.authorization?.match(BEARER_REGEX)?.[1];
+    if (!token) {
+        throw new AppError(401, "Missing or invalid Authorization header");
     }
 
-    const token = authHeader.split(' ')[1] || '';
-
-    const secret = env.JWT_ACCESS_SECRET;
-
-    if (!secret) throw new Error('Missing JWT_ACCESS_SECRET');
-
+    let decoded: unknown;
     try {
-        const decoded = jwt.verify(token, secret, { algorithms: ["HS256"] }) as { userId: number; email: string };
-        req.user = { id: decoded.userId, email: decoded.email };
-        next();
+        decoded = jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ["HS256"] });
     } catch (error) {
-        return res.status(401).json({ message: 'Token khong hop le' });
+        const message = error instanceof jwt.TokenExpiredError ? "Token expired" : "Invalid token";
+        throw new AppError(401, message);
     }
-}
+
+    // A valid signature does not guarantee the payload shape (e.g. tokens issued by older code)
+    const payload = tokenPayloadSchema.safeParse(decoded);
+    if (!payload.success) {
+        throw new AppError(401, "Invalid token");
+    }
+
+    req.user = { id: payload.data.userId, email: payload.data.email };
+    next();
+};

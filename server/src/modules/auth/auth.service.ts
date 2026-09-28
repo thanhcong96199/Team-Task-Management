@@ -18,11 +18,11 @@ export const authService = {
             }
         });
         if (findUser) {
-            throw new AppError(409, "Invalid email or password");
+            throw new AppError(409, "Email already exists");
         }
         // save user into db
         const salt = 10;
-        const expires = env.JWT_ACCESS_EXPIRES_IN;
+  
         const hashedPassword = await bcrypt.hash(userInfor.password, salt);
         const newUser = await prisma.user.create({
             data: {
@@ -43,22 +43,45 @@ export const authService = {
                     deletedAt: null
                 }
             });
-        console.log('find user', findUser)
+
         if (!findUser) {
-            throw new AppError(409, "Invalid email or password");
+            throw new AppError(401, "Invalid email or password");
         }
 
-        const decodedPass = await bcrypt.compare(password, findUser?.passwordHash);
-        if (decodedPass) {
+        const isPasswordValid = await bcrypt.compare(password, findUser.passwordHash);
+        if (isPasswordValid) {
+            const secretKey = env.JWT_ACCESS_SECRET;
+            const accessToken = jwt.sign(
+                { userId: findUser.id, email: findUser.email }, 
+                secretKey, 
+                { 
+                algorithm: 'HS256', 
+                expiresIn: env.JWT_ACCESS_EXPIRES_IN 
+            });
+
             return {
-                accessToken: findUser?.passwordHash,
+                accessToken: accessToken,
                 user: {
-                    id: findUser?.id,
-                    email: findUser?.email,
-                    name: findUser?.name
+                    id: findUser.id,
+                    email: findUser.email,
+                    name: findUser.name
                 }
             }
         }
-        return null;
+        throw new AppError(401, 'Invalid email or password');
+    },
+    async getInfor(userId: number) {
+        const findUser = await prisma.user.findUnique({
+            where: {
+                id: userId,
+                deletedAt: null
+            },
+            select: { id: true, email: true, name: true, createdAt: true }
+        });
+        // Token is still valid but the user was deleted
+        if (!findUser) {
+            throw new AppError(401, "User no longer exists");
+        }
+        return findUser;
     }
 };

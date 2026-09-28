@@ -16,12 +16,11 @@ export const validateParams = (schema: z.ZodType) =>
 
 export const validateBody = (schema: z.ZodType) => 
     (req: Request, res: Response, next: NextFunction) => {
-        console.log('req', req.body);
         const result = schema.safeParse(req.body);
         if (!result.success) {
             return res.status(400).json({ errors: z.flattenError(result.error).fieldErrors });
         }
 
-        req.body = result;
+        req.body = result.data;
         next();
     }
