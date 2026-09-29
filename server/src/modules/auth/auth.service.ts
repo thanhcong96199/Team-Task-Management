@@ -138,5 +138,17 @@ export const authService = {
             accessToken: newAccessToken,
             refreshToken: newRefreshToken.refreshToken
         }
+    },
+    async logout(refreshToken: string) {
+        const hashedToken = hashToken(refreshToken);
+        await prisma.refreshToken.updateMany({
+            where: {
+                tokenHash: hashedToken,
+                revokedAt: null,
+            },
+            data: {
+                revokedAt: new Date()
+            }
+        })
     }
 };

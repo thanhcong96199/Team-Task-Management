@@ -47,3 +47,8 @@ export const refreshToken = async (req: Request, res: Response) => {
         data: result
     })
 }
+
+export const logout = async (req: Request, res: Response) => {
+    await authService.logout(req.body.refreshToken);
+    return  res.status(204).send();
+}
