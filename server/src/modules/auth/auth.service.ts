@@ -2,13 +2,12 @@ import { prisma } from "../../config/database.js";
 import { AppError } from "../../utils/app-error.js";
 import bcrypt from 'bcrypt';
 import z from "zod";
-import jwt from 'jsonwebtoken';
 import type { loginSchema, registerSchema } from "./auth.validation.js";
-import { env } from "../../config/env.js";
+import { hashToken, signAccessToken, signRefreshToken, verifyRefreshToken } from "./token.util.js";
 
 
 export const authService = {
-    async signUpService (userInfor: z.infer<typeof registerSchema>) {
+    async signUpService(userInfor: z.infer<typeof registerSchema>) {
         // check email is exist
 
         const findUser = await prisma.user.findUnique({
@@ -22,7 +21,7 @@ export const authService = {
         }
         // save user into db
         const salt = 10;
-  
+
         const hashedPassword = await bcrypt.hash(userInfor.password, salt);
         const newUser = await prisma.user.create({
             data: {
@@ -31,18 +30,18 @@ export const authService = {
                 passwordHash: hashedPassword
             },
             select: { id: true, email: true, name: true, createdAt: true }
-            })
+        })
 
         return newUser;
     },
-    async loginService (userInfor: z.infer<typeof loginSchema>) {
+    async loginService(userInfor: z.infer<typeof loginSchema>) {
         const { email, password } = userInfor;
         const findUser = await prisma.user.findUnique({
-                where: {
-                    email,
-                    deletedAt: null
-                }
-            });
+            where: {
+                email,
+                deletedAt: null
+            }
+        });
 
         if (!findUser) {
             throw new AppError(401, "Invalid email or password");
@@ -50,17 +49,21 @@ export const authService = {
 
         const isPasswordValid = await bcrypt.compare(password, findUser.passwordHash);
         if (isPasswordValid) {
-            const secretKey = env.JWT_ACCESS_SECRET;
-            const accessToken = jwt.sign(
-                { userId: findUser.id, email: findUser.email }, 
-                secretKey, 
-                { 
-                algorithm: 'HS256', 
-                expiresIn: env.JWT_ACCESS_EXPIRES_IN 
+            const accessToken = signAccessToken(findUser);
+            const refreshToken = signRefreshToken(findUser);
+            const hashedToken = hashToken(refreshToken.refreshToken);
+
+            await prisma.refreshToken.create({
+                data: {
+                    userId: findUser.id,
+                    tokenHash: hashedToken,
+                    expiresAt: refreshToken.expiresAt
+                }
             });
 
             return {
                 accessToken: accessToken,
+                refreshToken: refreshToken.refreshToken,
                 user: {
                     id: findUser.id,
                     email: findUser.email,
@@ -83,5 +86,57 @@ export const authService = {
             throw new AppError(401, "User no longer exists");
         }
         return findUser;
+    },
+    async rotateRefreshToken(refreshToken: string) {
+        verifyRefreshToken(refreshToken);
+        const hashedToken = hashToken(refreshToken);
+        const findTokenHased = await prisma.refreshToken.findUnique({
+            where: {
+                tokenHash: hashedToken,
+            }
+        });
+
+        if (!findTokenHased) throw new AppError(401, "Invalid refresh token");
+
+
+        if (findTokenHased.revokedAt || (findTokenHased.expiresAt < new Date())) {
+            throw new AppError(401, 'Invalid refresh token');
+        }
+
+        const findUser = await prisma.user.findUnique({
+            where: {
+                id: findTokenHased.userId,
+                deletedAt: null
+            }
+        })
+
+        if (!findUser) throw new AppError(401, 'User no longer exists');
+
+        const newRefreshToken = signRefreshToken(findUser);
+        const newAccessToken = signAccessToken(findUser);
+
+        const newHasedToken = hashToken(newRefreshToken?.refreshToken);
+        await prisma.$transaction([
+            prisma.refreshToken.update({
+                where: {
+                    id: findTokenHased.id,
+                },
+                data: {
+                    revokedAt: new Date()
+                }
+            }),
+            prisma.refreshToken.create({
+                data: {
+                    tokenHash: newHasedToken,
+                    userId: findTokenHased.userId,
+                    expiresAt: newRefreshToken.expiresAt
+                }
+            })
+        ]);
+
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken.refreshToken
+        }
     }
 };

@@ -15,3 +15,7 @@ export const tokenPayloadSchema = z.object({
     userId: z.number().int().positive(),
     email: z.email()
 });
+
+export const refreshPayloadSchema = z.object({
+    refreshToken: z.string().min(1)
+})

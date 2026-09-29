@@ -40,3 +40,10 @@ export const getMe = async (req: Request, res: Response) => {
         data: result
     })
 }
+
+export const refreshToken = async (req: Request, res: Response) => {
+    const result = await authService.rotateRefreshToken(req.body.refreshToken);
+    return res.status(200).json({
+        data: result
+    })
+}
