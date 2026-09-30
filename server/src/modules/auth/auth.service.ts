@@ -2,7 +2,7 @@ import { prisma } from "../../config/database.js";
 import { AppError } from "../../utils/app-error.js";
 import bcrypt from 'bcrypt';
 import z from "zod";
-import type { loginSchema, registerSchema } from "./auth.validation.js";
+import type { loginSchema, registerSchema } from "@ttm/shared";
 import { hashToken, signAccessToken, signRefreshToken, verifyRefreshToken } from "./token.util.js";
 
 

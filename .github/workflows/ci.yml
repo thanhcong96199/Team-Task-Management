@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-lastest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Xin chào từ CI"
+      - run: ls -la

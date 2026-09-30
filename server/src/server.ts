@@ -5,5 +5,5 @@ import { env } from "./config/env.js";
 const PORT = env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  // console.log(`Server running at http://localhost:${PORT}`);
 });
