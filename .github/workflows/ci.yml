@@ -24,7 +24,15 @@ jobs:
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
-      - name: Format, lint, typecheck
+      - name: Format
+        run: npm run format
+
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+      
+      - name: Typecheck
+        if: ${{ !cancelled() }}
         run: npm run check
 
       - name: Build
