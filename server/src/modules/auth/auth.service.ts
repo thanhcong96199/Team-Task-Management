@@ -34,6 +34,7 @@ export const authService = {
     return newUser;
   },
   async loginService(userInfor: z.infer<typeof loginSchema>) {
+    const x: number = "abc";
     const { email, password } = userInfor;
     const findUser = await prisma.user.findUnique({
       where: {
