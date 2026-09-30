@@ -9,7 +9,12 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["**/dist/**", "**/node_modules/**", "server/src/generated/**", "server/prisma/migrations/**"]),
+  globalIgnores([
+    "**/dist/**",
+    "**/node_modules/**",
+    "server/src/generated/**",
+    "server/prisma/migrations/**",
+  ]),
 
   // Base: all TypeScript/JavaScript files
   {
@@ -17,7 +22,10 @@ export default defineConfig([
     extends: [js.configs.recommended, tseslint.configs.recommended],
     rules: {
       // Allow intentionally unused args/vars when prefixed with _ (e.g. errorHandler's _req)
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       // Enforce `import type` for type-only imports (matches verbatimModuleSyntax)
       "@typescript-eslint/consistent-type-imports": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }],

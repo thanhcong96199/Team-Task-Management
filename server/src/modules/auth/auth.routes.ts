@@ -10,6 +10,6 @@ authRouter.post("/register", validateBody(registerSchema), signUp);
 authRouter.post("/login", validateBody(loginSchema), login);
 authRouter.get("/me", authenticate, getMe);
 authRouter.post("/refresh", validateBody(refreshPayloadSchema), refreshToken);
-authRouter.post("/logout", validateBody(refreshPayloadSchema), logout)
+authRouter.post("/logout", validateBody(refreshPayloadSchema), logout);
 
 export default authRouter;
