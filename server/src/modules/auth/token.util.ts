@@ -1,3 +1,4 @@
+import type { Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { env } from "../../config/env.js";
 import { AppError } from "../../utils/app-error.js";
@@ -63,4 +64,22 @@ export const hashToken = (token: string) => {
   const hashedToken = createdHash.update(token).digest("hex");
 
   return hashedToken;
+};
+
+export const setRefreshCookie = (res: Response, token: string, expiresAt: Date) => {
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/v1/auth",
+    maxAge: expiresAt.getTime() - Date.now(),
+  });
+};
+
+export const clearRefreshCookie = (res: Response) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 };
