@@ -1,20 +1,19 @@
-
 let accessToken: string | null = null;
 
 const setAccessToken = (newAccessToken: string) => {
-    accessToken = newAccessToken;
+  accessToken = newAccessToken;
 };
 
 const getAccessToken = () => {
-    return accessToken;
+  return accessToken;
 };
 
 const clearAccessToken = () => {
-    accessToken = null;
+  accessToken = null;
 };
 
 export default {
-    setAccessToken,
-    getAccessToken,
-    clearAccessToken,
-}
+  setAccessToken,
+  getAccessToken,
+  clearAccessToken,
+};
