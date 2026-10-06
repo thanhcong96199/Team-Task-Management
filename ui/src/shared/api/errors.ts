@@ -27,6 +27,14 @@ export class ApiError extends Error {
 
 export const isApiError = (error: unknown): error is ApiError => error instanceof ApiError;
 
+// Every error coming out of apiClient is an ApiError (see normalizeError), so tell
+// TanStack Query: `error` in useQuery/useMutation is typed ApiError instead of Error.
+declare module "@tanstack/react-query" {
+  interface Register {
+    defaultError: ApiError;
+  }
+}
+
 // Used only when the server did not send a usable message
 const DEFAULT_MESSAGES: Record<ApiErrorKind, string> = {
   http: "Something went wrong. Please try again.",

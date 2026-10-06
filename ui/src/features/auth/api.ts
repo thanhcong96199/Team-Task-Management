@@ -1,34 +1,39 @@
-import instance from "@/shared/api/client";
+import instance, { unwrap } from "@/shared/api/client";
 import tokenStore from "@/shared/api/tokenStore";
-import type { LoginInput } from "@ttm/shared";
+import type { ApiSuccess, LoginInput, MeResult } from "@ttm/shared";
+import type { LoginResult } from "@ttm/shared";
 
 const { setAccessToken, clearAccessToken } = tokenStore;
 
 export const authApi = {
   login: (input: LoginInput) => {
-    return instance.post("/auth/login", input).then((response) => {
-      const { accessToken } = response.data.data;
+    return instance
+      .post<ApiSuccess<LoginResult>>("/auth/login", input)
+      .then(unwrap)
+      .then((response) => {
+        const { accessToken } = response;
 
-      setAccessToken(accessToken);
+        setAccessToken(accessToken);
 
-      return response.data.data;
-    });
+        return response;
+      });
   },
   getMe: () => {
-    return instance.get("/auth/me").then((response) => {
-      return response.data.data;
-    });
+    return instance.get<ApiSuccess<MeResult>>("/auth/me").then(unwrap);
   },
   refreshToken: () => {
-    return instance.post("/auth/refresh").then((response) => {
-      const { accessToken } = response.data.data;
+    return instance
+      .post<ApiSuccess<LoginResult>>("/auth/refresh")
+      .then(unwrap)
+      .then((response) => {
+        const { accessToken } = response;
 
-      setAccessToken(accessToken);
-      return response.data.data;
-    });
+        setAccessToken(accessToken);
+        return response;
+      });
   },
   logout: () => {
-    return instance.post("/auth/logout").finally(() => {
+    return instance.post<ApiSuccess<void>>("/auth/logout").finally(() => {
       clearAccessToken();
     });
   },

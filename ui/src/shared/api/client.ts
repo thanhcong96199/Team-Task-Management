@@ -1,6 +1,7 @@
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { normalizeError } from "./errors";
 import tokenStore from "./tokenStore";
+import type { ApiSuccess } from "@ttm/shared";
 
 const instance = axios.create({ baseURL: "/api/v1", timeout: 15_000 });
 instance.defaults.withCredentials = true; // Include cookies in requests
@@ -20,4 +21,6 @@ instance.interceptors.response.use(
   (error: unknown) => Promise.reject(normalizeError(error)),
 );
 
+
+export const unwrap = <T>(response: AxiosResponse<ApiSuccess<T>>) => response.data.data;
 export default instance;
