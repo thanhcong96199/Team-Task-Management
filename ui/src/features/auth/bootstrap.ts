@@ -1,24 +1,14 @@
-import type { LoginResult } from "@ttm/shared";
-import { authApi } from "./api";
-import { useAuthStore } from "./store";
-
-const { setAuthenticated, setUnauthenticated } = useAuthStore.getState();
+import { endSession, refreshSession } from "./session";
 
 let bootstrapPromise: Promise<void> | null = null;
 
+// Runs once per page load and keeps its promise: calling it again (e.g. StrictMode)
+// returns the same result instead of sending a second /refresh.
+// Goes through refreshSession so several tabs opening at once take turns (Web Locks).
 export const bootstrapAuth = (): Promise<void> => {
-    if (bootstrapPromise) {
-        return bootstrapPromise;
-    }
-
-    bootstrapPromise = authApi.refreshToken()
-        .then((result: LoginResult) => {
-            setAuthenticated(result.user);
-        })
-        .catch(() => {
-            setUnauthenticated();
-        });
-
-    return bootstrapPromise;
-
+  bootstrapPromise ??= refreshSession().then(
+    () => undefined, // refreshSession already stored the user
+    () => endSession(), // no valid session (or backend down): show the app as logged out
+  );
+  return bootstrapPromise;
 };
