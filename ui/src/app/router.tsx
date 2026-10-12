@@ -15,6 +15,13 @@ const route = createBrowserRouter([
             return { Component: LoginPage };
         },
     },
+    {
+        path: "/register",
+        lazy: async () => {
+            const RegisterPage = (await import("../features/auth/pages/RegisterPage")).default;
+            return { Component: RegisterPage };
+        },
+    }
 ]);
 
 export default route;

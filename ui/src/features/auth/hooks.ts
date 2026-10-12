@@ -28,3 +28,14 @@ export const useLogout = () => {
         },
     });
 }
+
+export const useRegister = () => {
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: authApi.register,
+        onSuccess: () => {
+            navigate("/login");
+        } 
+    })
+}
