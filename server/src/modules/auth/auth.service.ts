@@ -137,6 +137,11 @@ export const authService = {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken.refreshToken,
       expiresAt: newRefreshToken.expiresAt,
+      user: {
+        id: findUser.id,
+        email: findUser.email,
+        name: findUser.name,
+      },
     };
   },
   async logout(refreshToken: string) {

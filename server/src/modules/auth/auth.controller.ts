@@ -22,6 +22,7 @@ export const login = async (req: Request, res: Response) => {
     email: req.body?.email,
     password: req.body?.password,
   };
+
   const result = await authService.loginService(userParam);
 
   setRefreshCookie(res, result.refreshToken, result.expiresAt);
@@ -56,6 +57,7 @@ export const refreshToken = async (req: Request, res: Response) => {
   return res.status(200).json({
     data: {
       accessToken: result.accessToken,
+      user: result.user,
     },
   });
 };

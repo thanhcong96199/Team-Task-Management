@@ -54,7 +54,8 @@ Không chọn phương án 4 vì header `Authorization` không bao giờ đượ
 
 - Backend cần thêm `cookie-parser`. Nếu thiếu, `req.cookies` là `undefined`, và TypeScript **không** bắt được lỗi này vì `req.cookies` có kiểu `any`.
 - Options của cookie phải **giống hệt nhau** ở mọi chỗ set và xoá. `clearCookie` chỉ xoá được cookie có cùng `path`. Nếu `path` khác nhau, trình duyệt sẽ lưu 2 cookie cùng tên và có thể gửi nhầm cookie cũ đã bị thu hồi.
-- Access token mất khi reload trang, nên frontend phải có trạng thái `loading` lúc khởi động để tránh chớp qua trang login.
+- Access token mất khi reload trang, nên frontend phải có trạng thái `loading` lúc khởi động để tránh chớp qua trang login. Chi phí là 1 request `POST /refresh` (khoảng 20–100ms) mỗi lần tải trang, nhỏ so với việc tải JS bundle.
+- Mỗi lần refresh (kể cả khi reload trang) tạo thêm 1 bản ghi trong bảng `RefreshToken`. Cần một job dọn định kỳ các bản ghi đã hết hạn hoặc đã bị thu hồi quá vài ngày.
 - `path` khớp theo tiền tố, nên `/api/v1/auth/me` và `/api/v1/auth/login` vẫn nhận cookie dù không dùng tới. Có thể thu hẹp bằng cách gom `/refresh` và `/logout` vào `/api/v1/auth/session/*`, nhưng hiện chưa cần.
 - Postman bỏ qua `SameSite` và `HttpOnly`. Chỉ dùng Postman để kiểm tra server có gửi đúng `Set-Cookie`; muốn kiểm tra cookie có thật sự được bảo vệ thì phải test trên trình duyệt (`document.cookie` không được thấy `refreshToken`).
 
@@ -63,3 +64,17 @@ Không chọn phương án 4 vì header `Authorization` không bao giờ đượ
 - Khi dev, frontend gọi API qua proxy của Vite (`/api` → `localhost:3000`) để FE và BE cùng origin. Nếu gọi thẳng sang port khác, cookie `sameSite: strict` có thể không được gửi.
 - Nếu sau này deploy FE và BE ở 2 domain khác nhau (ví dụ `app.example.com` và `api.example.com`), cần xem lại `sameSite`, `domain` và cấu hình CORS (`credentials: true`).
 - Access token vẫn dùng được tối đa 15 phút sau khi logout. Đây là giới hạn đã chấp nhận của JWT stateless (xem Task 5).
+
+**Không lưu access token vào Redux, `localStorage` hay `sessionStorage`:**
+
+Redux, Zustand hay Context cũng nằm trong memory, nên reload trang vẫn mất. Muốn giữ được qua reload thì phải ghi xuống storage (ví dụ `redux-persist` ghi vào `localStorage`), và khi đó XSS đọc được, tức là quay về phương án 1. Mọi nơi mà JavaScript đọc lại được sau khi reload thì script độc hại cũng đọc được. Vì vậy access token chỉ nằm trong memory, và lấy lại bằng `/refresh` khi tải trang.
+
+**Nhiều tab refresh cùng lúc:**
+
+Các tab dùng chung một cookie nhưng mỗi tab có memory riêng, nên cơ chế "chỉ refresh một lần" trong một tab không chặn được các tab khác. Khi nhiều tab cùng gọi `/refresh` với cùng một refresh token (ví dụ mở lại trình duyệt có 3 tab), rotation chỉ cho tab đầu tiên thành công, các tab còn lại nhận 401 và bị đẩy về trang login.
+
+Hướng xử lý: frontend dùng Web Locks API (`navigator.locks.request("auth-refresh", ...)`) để các tab xếp hàng khi refresh. Tab sau chờ tab trước xong rồi mới gọi `/refresh` với cookie mới. Phương án thay thế ở backend là cho phép dùng lại refresh token vừa bị thu hồi trong một khoảng ân hạn ngắn (10–30 giây), nhưng cách này làm phức tạp rotation và làm yếu reuse detection, nên chưa áp dụng.
+
+**Việc có thể làm thêm:**
+
+- Cho `/refresh` trả về luôn `user` cùng `accessToken`, để lúc khởi động app chỉ cần 1 request thay vì `/refresh` rồi mới tới `/me`.
