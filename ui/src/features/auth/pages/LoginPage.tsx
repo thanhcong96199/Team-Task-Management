@@ -1,8 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@ttm/shared";
 import { useForm } from "react-hook-form";
-import { applyApiErrorToForm } from "@/shared/lib/form";
+import { applyApiErrorToForm, getFieldError } from "@/shared/lib/form";
 import { useLogin } from "../hooks";
+import { FormField } from "@/shared/ui/form-field";
+import { Button } from "@/shared/ui/button";
+import FormError from "@/shared/ui/form-error";
+import { Link } from "react-router";
 
 // Field names come from the shared schema, so they never drift from the backend
 const LOGIN_FIELDS = loginSchema.keyof().options;
@@ -25,22 +29,33 @@ export default function LoginPage() {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-      {errors.root?.server && <div role="alert">{errors.root.server.message}</div>}
+    <form
+      className="w-full max-w-sm mx-auto flex flex-col gap-3"
+      onSubmit={form.handleSubmit(onSubmit)}
+      noValidate
+    >
+      <FormError message={errors?.root?.server?.message} />
 
-      <div>
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" {...form.register("email")} />
-        {errors.email && <span>{errors.email.message}</span>}
-      </div>
-      <div>
-        <label htmlFor="password">Password</label>
-        <input id="password" type="password" {...form.register("password")} />
-        {errors.password && <span>{errors.password.message}</span>}
-      </div>
-      <button type="submit" disabled={login.isPending}>
+      <FormField
+        label="Email"
+        type="email"
+        error={getFieldError(errors, "email")}
+        {...form.register("email")}
+      />
+
+      <FormField
+        label="Password"
+        type="password"
+        error={getFieldError(errors, "password")}
+        {...form.register("password")}
+      />
+
+      <Button type="submit" variant={"default"} disabled={login.isPending}>
         {login.isPending ? "Logging in..." : "Login"}
-      </button>
+      </Button>
+      <Button variant={"link"} nativeButton={false} render={<Link to="/register" />}>
+        Don't have an account? Sign up
+      </Button>
     </form>
   );
 }

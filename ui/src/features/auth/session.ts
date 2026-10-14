@@ -3,6 +3,11 @@ import { configureAuth } from "@/shared/api/client";
 import tokenStore from "@/shared/api/tokenStore";
 import { authApi } from "./api";
 import { useAuthStore } from "./store";
+import { queryClient } from "@/shared/lib/queryClient";
+
+type AuthMessage = { action: "logout" };
+const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("auth") : null;
+const broadcast = (message: AuthMessage) => channel?.postMessage(message);
 
 // Module-level on purpose: every caller in this tab must see the same in-flight refresh
 let refreshPromise: Promise<LoginResult> | null = null;
@@ -29,9 +34,25 @@ export function refreshSession(): Promise<LoginResult> {
   return refreshPromise;
 }
 
-export function endSession() {
+export function clearLocalSession() {
   tokenStore.clearAccessToken();
   useAuthStore.getState().setUnauthenticated();
+  queryClient.clear();
+}
+
+export function endSession() {
+  clearLocalSession();
+  broadcast({ action: "logout" });
+}
+
+export function listenToOtherTabs() {
+  if (channel) {
+    channel.onmessage = (event) => {
+      if (event.data?.action === "logout") {
+        clearLocalSession();
+      }
+    };
+  }
 }
 
 // Called once at startup, before any request is sent
@@ -40,4 +61,5 @@ export function setupAuth() {
     refresh: () => refreshSession().then((result) => result.accessToken),
     onAuthFailure: endSession,
   });
+  listenToOtherTabs();
 }

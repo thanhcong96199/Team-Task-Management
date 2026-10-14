@@ -19,11 +19,7 @@ export const authApi = {
       });
   },
   register: (input: RegisterInput) => {
-    return instance.post<ApiSuccess<number>>("/auth/register", input)
-    .then(unwrap)
-    .then(response => {
-      return response;
-    })
+    return instance.post<ApiSuccess<MeResult>>("/auth/register", input).then(unwrap);
   },
   getMe: () => {
     return instance.get<ApiSuccess<MeResult>>("/auth/me").then(unwrap);

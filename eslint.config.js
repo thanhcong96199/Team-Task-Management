@@ -45,6 +45,10 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
+    files: ["ui/src/shared/ui/**/*.{ts,tsx}"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
+  {
     files: ["ui/vite.config.ts"],
     languageOptions: { globals: globals.node },
   },
