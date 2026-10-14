@@ -1,4 +1,4 @@
-import { endSession, refreshSession } from "./session";
+import { clearLocalSession, refreshSession } from "./session";
 
 let bootstrapPromise: Promise<void> | null = null;
 
@@ -8,7 +8,7 @@ let bootstrapPromise: Promise<void> | null = null;
 export const bootstrapAuth = (): Promise<void> => {
   bootstrapPromise ??= refreshSession().then(
     () => undefined, // refreshSession already stored the user
-    () => endSession(), // no valid session (or backend down): show the app as logged out
+    () => clearLocalSession(), // no valid session (or backend down): show the app as logged out
   );
   return bootstrapPromise;
 };

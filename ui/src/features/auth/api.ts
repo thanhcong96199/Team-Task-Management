@@ -1,6 +1,6 @@
 import instance, { unwrap } from "@/shared/api/client";
 import tokenStore from "@/shared/api/tokenStore";
-import type { ApiSuccess, LoginInput, MeResult } from "@ttm/shared";
+import type { ApiSuccess, LoginInput, MeResult, RegisterInput } from "@ttm/shared";
 import type { LoginResult } from "@ttm/shared";
 
 const { setAccessToken, clearAccessToken } = tokenStore;
@@ -17,6 +17,9 @@ export const authApi = {
 
         return response;
       });
+  },
+  register: (input: RegisterInput) => {
+    return instance.post<ApiSuccess<MeResult>>("/auth/register", input).then(unwrap);
   },
   getMe: () => {
     return instance.get<ApiSuccess<MeResult>>("/auth/me").then(unwrap);

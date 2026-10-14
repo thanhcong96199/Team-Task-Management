@@ -1,4 +1,4 @@
-import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
+import type { FieldValues, Path, UseFormSetError, FieldErrors } from "react-hook-form";
 import type { ApiError } from "@/shared/api/errors";
 
 // Shows a server error on the form:
@@ -21,3 +21,6 @@ export function applyApiErrorToForm<T extends FieldValues>(
     setError("root.server", { type: "server", message: error.message });
   }
 }
+
+export const getFieldError = <T extends FieldValues>(errors: FieldErrors<T>, name: Path<T>) =>
+  errors[name]?.message as string | undefined;
