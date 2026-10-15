@@ -17,9 +17,9 @@ export function AvatarDropdown({ name, onLogout }: AvaterProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-          <Avatar>
-            <AvatarFallback>{name}</AvatarFallback>
-          </Avatar>
+        <Avatar>
+          <AvatarFallback>{name}</AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-32">
         <DropdownMenuGroup>
