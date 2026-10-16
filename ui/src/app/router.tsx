@@ -17,8 +17,8 @@ const route = createBrowserRouter([
                 path: "/",
 
                 lazy: async () => {
-                  const HomePage = (await import("../features/auth/pages/HomePage")).default;
-                  return { Component: HomePage };
+                  const ListWorkspace = (await import("../features/workspace/page/WorkspaceListPage")).default;
+                  return { Component: ListWorkspace };
                 },
               },
             ],

@@ -1,6 +1,6 @@
 # F2: Giao diện Workspace
 
-- Trạng thái: Chờ Task 6
+- Trạng thái: Đang làm (bắt đầu 2026-10-15)
 - Phụ thuộc: [Task 6](task-06-workspace-api.md) đã merge, F1 hoàn thành
 
 ## Mục tiêu
@@ -11,15 +11,30 @@ Trang Home hiện danh sách workspace user tham gia. User tạo được worksp
 
 ## Bước 0: Dọn dẹp còn lại từ F1
 
-Làm trước, rồi commit riêng:
+Làm trước, rồi commit riêng. Các mục đã xong được đánh dấu theo code hiện tại:
 
-- [ ] **`AvatarDropdown`**: `DropdownMenuTrigger` đang bọc một `Button`, tạo ra thẻ `<button>` nằm trong `<button>` (HTML không hợp lệ, trình đọc màn hình đọc sai). Dùng `render` của Base UI: `<DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>`.
-- [ ] **Nút avatar chỉ có icon** nên cần tên cho trình đọc màn hình: `aria-label="Open user menu"`.
+- [x] `<button>` lồng trong `<button>`: `DropdownMenuTrigger` không còn bọc `Button`.
+- [x] `AppHeader` đã dùng thẻ `<header>`. `AppLayout` đã gọn.
+- [x] F1 đã được commit (`1a37fa3`).
+- [ ] **Nút avatar chỉ có chữ cái đầu** nên cần tên cho trình đọc màn hình: `aria-label="Open user menu"` trên `DropdownMenuTrigger`.
 - [ ] Các mục "Profile" và "Settings" chưa làm gì. Xoá, hoặc để `disabled` cho tới khi có trang tương ứng.
-- [ ] **`AppHeader`**: dùng thẻ `<header>` thay cho `<div>`. Thay `bg-blue-100 border-blue-200` bằng token (`bg-background border-b`), theo quy ước 1 của ADR 0004. Thay chữ "Home" cứng bằng tên app hoặc logo, và cho nó là link về `/`.
-- [ ] **`AppLayout`**: xoá `{" "}` và comment JSX do Prettier tách ra.
-- [ ] **`session.ts`**: khi nhận thông điệp, `event.data` vẫn có kiểu `any`. Kiểm tra bằng schema zod trước khi dùng.
-- [ ] Commit toàn bộ F1 và tạo PR. Hiện có rất nhiều file thay đổi chưa commit.
+- [ ] **`AppHeader`**: thay `bg-blue-100 border border-blue-200` bằng token (`bg-background border-b`), theo quy ước 1 của ADR 0004. Thay chữ "Home" cứng bằng tên app và cho nó là `<Link to="/">`.
+- [ ] **`session.ts`**: trong `channel.onmessage`, `event.data` có kiểu `any`. Kiểm tra bằng schema zod (ví dụ `z.object({ action: z.literal("logout") })`) trước khi dùng.
+- [ ] Sửa lỗi chính tả `AvaterProps` → `AvatarProps`.
+
+## Hợp đồng API (Task 6, đã xong)
+
+Mọi response thành công có dạng `{ data: ... }`. Dùng `unwrap` như `features/auth/api.ts`.
+
+| Gọi                            | Thành công                    | Lỗi cần xử lý ở UI                              |
+| ------------------------------ | ----------------------------- | ----------------------------------------------- |
+| `GET /workspaces`              | `200`, `WorkspaceSummary[]`   | Mạng/500 → trạng thái lỗi                       |
+| `POST /workspaces` `{ name }`  | `201`, `WorkspaceSummary`     | `400` → `fieldErrors.name` hiện dưới ô nhập     |
+| `GET /workspaces/:workspaceId` | `200`, `WorkspaceDetail`      | `404` → "Workspace not found"; `400` → như 404  |
+
+- Kiểu `WorkspaceSummary`, `WorkspaceDetail`, `WorkspaceRole` và `createWorkspaceSchema`, `workspaceParamsSchema` đều import từ `@ttm/shared`. **Không tự khai báo lại kiểu ở UI.**
+- `error` trong `useQuery` có kiểu `ApiError`, nên kiểm tra `error.status === 404` trực tiếp. `queryClient` đã tắt retry cho 404, nên trang "not found" hiện ngay.
+- `createdAt` là chuỗi ISO. Nếu muốn hiển thị, dùng `new Date(createdAt).toLocaleDateString()`.
 
 ## Bước 1: Cấu trúc feature `workspace`
 
@@ -60,7 +75,7 @@ Nhờ chia theo cấp, `invalidateQueries({ queryKey: workspaceKeys.all })` làm
 
 Cả hai nằm trong nhóm `ProtectedRoute` → `AppLayout`.
 
-**Đọc `:workspaceId` an toàn:** `useParams()` trả về `string | undefined`. Parse bằng zod (`z.coerce.number().int().positive()`). Không hợp lệ (ví dụ `/workspaces/abc`) thì hiện trạng thái "không tìm thấy", không gọi API.
+**Đọc `:workspaceId` an toàn:** `useParams()` trả về `string | undefined`. Parse bằng `workspaceParamsSchema` từ `@ttm/shared` (cùng schema backend dùng). Không hợp lệ (ví dụ `/workspaces/abc`) thì hiện trạng thái "không tìm thấy", không gọi API.
 
 ## Bước 4: `WorkspaceListPage`
 
@@ -89,7 +104,7 @@ Màn hình phải có đủ **4 trạng thái**:
 
 ## Bước 6: `WorkspaceDetailPage`
 
-- `useWorkspace(id)` lấy dữ liệu từ `GET /workspaces/:workspaceId`.
+- `useWorkspace(id)` lấy dữ liệu từ `GET /workspaces/:workspaceId`. Khi id không hợp lệ thì không gửi request: dùng `enabled: false`, hoặc không render component gọi hook.
 - Hiện tên workspace và badge vai trò. Phần nội dung tạm ghi "Projects will appear here" (Task 7).
 - **API trả 404** (không phải thành viên, hoặc workspace không tồn tại): hiện trạng thái "Workspace not found" kèm link về `/`. Không để trang trắng hay rơi vào `RouteErrorPage`.
 - **Giao diện theo vai trò:** chỉ ADMIN thấy nút "Settings" (tạm thời `disabled`). Đây chỉ là che giao diện; backend vẫn phải kiểm tra quyền ở mọi API.

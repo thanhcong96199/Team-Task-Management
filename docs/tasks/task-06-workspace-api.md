@@ -1,6 +1,6 @@
 # Task 6: API Workspace
 
-- Trạng thái: Đang làm
+- Trạng thái: Hoàn thành (2026-10-15)
 - Phụ thuộc: Task 1–5 (auth), middleware `authenticate`
 - Frontend dùng API này: [F2](f2-workspace-ui.md)
 
