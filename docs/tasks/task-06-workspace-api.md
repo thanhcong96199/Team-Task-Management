@@ -30,7 +30,7 @@ Bản nháp hiện tại có các lỗi sau, cần sửa khi làm task này:
 
 Tạo `packages/shared/src/workspace.schema.ts` và export từ `index.ts`:
 
-- `createWorkspaceSchema`: `{ name }`, chuỗi, `trim`, dài 1–100 ký tự.
+- `createWorkspaceSchema`: `{ name, projectName? }`. `name` là chuỗi, `trim`, dài 1–100 ký tự. `projectName` tùy chọn, tối đa 100 ký tự (xem mục "Bổ sung" bên dưới). Kiểu form `CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>`.
 - Type `WorkspaceRole = "ADMIN" | "MEMBER"`.
 - Type `WorkspaceSummary`: dữ liệu một dòng trong danh sách.
   ```ts
@@ -43,7 +43,7 @@ Tạo `packages/shared/src/workspace.schema.ts` và export từ `index.ts`:
     createdAt: string; // JSON không có kiểu Date
   }
   ```
-- Type `WorkspaceDetail`: tạm thời giống `WorkspaceSummary`. Task 7 sẽ bổ sung.
+- Type `WorkspaceDetail`: `WorkspaceSummary & { projects: ProjectSummary[] }`, với `ProjectSummary = { id, name }`. Chỉ API chi tiết trả `projects`; API danh sách chỉ trả `projectCount`.
 
 Nhớ chạy `npm run build:shared` sau khi sửa.
 
@@ -74,7 +74,7 @@ Gắn router vào `app.ts` ở `/api/v1/workspaces`. **Mọi route đều qua `a
 ### `GET /workspaces/:workspaceId`
 
 - Dùng middleware phân quyền ở bước 6.3.
-- Trả `WorkspaceDetail` kèm `role` của user hiện tại.
+- Trả `WorkspaceDetail` kèm `role` của user hiện tại, và `projects` chưa bị xoá mềm (mới nhất trước).
 
 ## Bước 6.3: Middleware phân quyền `requireWorkspaceMember`
 
@@ -99,6 +99,16 @@ Middleware throw `AppError`, không tự trả response, để mọi lỗi đi q
 - Xoá `board.middleware.ts` cũ, hoặc viết lại theo cách của `requireWorkspaceMember` ở Task 8. Bản hiện tại trả `404` kèm message `"Forbidden"` và tự trả response thay vì throw.
 - Xoá `boardParamsSchema` khỏi `validate.middleware.ts` (sẽ chuyển về module board ở Task 8).
 
+## Bổ sung (2026-10-19): tạo project đầu tiên cùng workspace
+
+Khi tạo workspace, user có thể nhập tên project đầu tiên.
+
+- `projectName` **tùy chọn**. Bỏ trống (hoặc chuỗi rỗng) thì chỉ tạo workspace như trước.
+- Có `projectName`: thêm `projects: { create: { name, description: "" } }` vào **cùng nested write** với workspace và member ADMIN. Một bước lỗi thì cả ba đều rollback.
+- `description` đang bắt buộc trong schema Prisma nên tạm truyền `""`. Task 7 sẽ quyết định có cho `description` là tuỳ chọn hay không.
+- Response vẫn là `WorkspaceSummary`, với `projectCount: 1`.
+- Đây chỉ là lối tắt lúc tạo workspace. **Task 7 vẫn phải có API project riêng** (tạo, sửa, xoá, liệt kê project trong workspace).
+
 ## Tự kiểm tra
 
 Tạo 2 user A và B. Dùng Postman với access token của từng user.
@@ -109,6 +119,8 @@ Tạo 2 user A và B. Dùng Postman với access token của từng user.
 | 2   | A gọi `GET /workspaces` khi chưa có workspace                                                    | 200, `[]`                                                 |
 | 3   | A gọi `POST /workspaces` với `{ "name": "Team A" }`                                              | 201, `role: "ADMIN"`, `memberCount: 1`, `projectCount: 0` |
 | 4   | A gọi `POST /workspaces` với `{ "name": "   " }`                                                 | 400, lỗi ở field `name`                                   |
+| 4b  | A gọi `POST /workspaces` với `{ "name": "Team P", "projectName": "Website" }`                    | 201, `projectCount: 1`; chi tiết có `projects: [Website]` |
+| 4c  | A gọi `POST /workspaces` với `{ "name": "Team Q", "projectName": "" }`                           | 201, `projectCount: 0`                                    |
 | 5   | A gọi `GET /workspaces`                                                                          | 200, có "Team A"                                          |
 | 6   | B gọi `GET /workspaces`                                                                          | 200, `[]`. **Không thấy workspace của A**                 |
 | 7   | B gọi `GET /workspaces/<id của Team A>`                                                          | **404**                                                   |

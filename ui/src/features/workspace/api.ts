@@ -1,9 +1,6 @@
 import instance, { unwrap } from "@/shared/api/client";
-import type { ApiSuccess, WorkspaceDetail, WorkspaceSummary } from "@ttm/shared";
+import type { ApiSuccess, CreateWorkspaceInput, WorkspaceDetail, WorkspaceSummary } from "@ttm/shared";
 
-export type CreateWorkspaceInput = {
-    name: string;
-}
 
 export const workspaceApi = {
     getWorkspaces: () => {

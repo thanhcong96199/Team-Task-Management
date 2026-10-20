@@ -21,6 +21,14 @@ const route = createBrowserRouter([
                   return { Component: ListWorkspace };
                 },
               },
+              {
+                path: "/workspaces/:workspaceId",
+
+                lazy: async () => {
+                  const WorkspaceDetail = (await import("../features/workspace/page/WorkspaceDetailPage")).default;
+                  return { Component: WorkspaceDetail };
+                },
+              },
             ],
           },
         ],

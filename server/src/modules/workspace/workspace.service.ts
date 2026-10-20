@@ -41,12 +41,20 @@ export const workspaceService = {
     return memberships.map((m) => toSummary(m.workspace, m.role));
   },
 
-  async createWorkspace(input: { userId: number; name: string }): Promise<WorkspaceSummary> {
-    // Nested write runs in one transaction: no workspace without an ADMIN member.
+  async createWorkspace(input: {
+    userId: number;
+    name: string;
+    projectName?: string;
+  }): Promise<WorkspaceSummary> {
+    // Nested write runs in one transaction: no workspace without an ADMIN member,
+    // and if the first project fails, the workspace is rolled back too.
     const workspace = await prisma.workspace.create({
       data: {
         name: input.name,
         workspaceMembers: { create: { userId: input.userId, role: "ADMIN" } },
+        ...(input.projectName && {
+          projects: { create: { name: input.projectName, description: "" } },
+        }),
       },
       select: workspaceSummarySelect,
     });
@@ -60,13 +68,20 @@ export const workspaceService = {
   }): Promise<WorkspaceDetail> {
     const workspace = await prisma.workspace.findFirst({
       where: { id: membership.workspaceId, deletedAt: null },
-      select: workspaceSummarySelect,
+      select: {
+        ...workspaceSummarySelect,
+        projects: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!workspace) {
       throw new AppError(404, "Workspace not found");
     }
 
-    return toSummary(workspace, membership.role);
+    return { ...toSummary(workspace, membership.role), projects: workspace.projects };
   },
 };

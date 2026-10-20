@@ -29,10 +29,10 @@ Mọi response thành công có dạng `{ data: ... }`. Dùng `unwrap` như `fea
 | Gọi                            | Thành công                    | Lỗi cần xử lý ở UI                              |
 | ------------------------------ | ----------------------------- | ----------------------------------------------- |
 | `GET /workspaces`              | `200`, `WorkspaceSummary[]`   | Mạng/500 → trạng thái lỗi                       |
-| `POST /workspaces` `{ name }`  | `201`, `WorkspaceSummary`     | `400` → `fieldErrors.name` hiện dưới ô nhập     |
-| `GET /workspaces/:workspaceId` | `200`, `WorkspaceDetail`      | `404` → "Workspace not found"; `400` → như 404  |
+| `POST /workspaces` `{ name, projectName? }` | `201`, `WorkspaceSummary` | `400` → `fieldErrors` hiện dưới ô nhập tương ứng |
+| `GET /workspaces/:workspaceId` | `200`, `WorkspaceDetail` (có `projects`) | `404` → "Workspace not found"; `400` → như 404  |
 
-- Kiểu `WorkspaceSummary`, `WorkspaceDetail`, `WorkspaceRole` và `createWorkspaceSchema`, `workspaceParamsSchema` đều import từ `@ttm/shared`. **Không tự khai báo lại kiểu ở UI.**
+- Kiểu `WorkspaceSummary`, `WorkspaceDetail`, `WorkspaceRole`, `CreateWorkspaceInput` và `createWorkspaceSchema`, `workspaceParamsSchema` đều import từ `@ttm/shared`. **Không tự khai báo lại kiểu ở UI.**
 - `error` trong `useQuery` có kiểu `ApiError`, nên kiểm tra `error.status === 404` trực tiếp. `queryClient` đã tắt retry cho 404, nên trang "not found" hiện ngay.
 - `createdAt` là chuỗi ISO. Nếu muốn hiển thị, dùng `new Date(createdAt).toLocaleDateString()`.
 
@@ -97,6 +97,9 @@ Màn hình phải có đủ **4 trạng thái**:
 
 - Dùng `Dialog` của shadcn (`npx shadcn@latest add dialog`). Dialog đã lo phần giữ focus bên trong, đóng bằng Esc, và trả focus về nút mở khi đóng.
 - Form dùng `FormField`, `zodResolver(createWorkspaceSchema)` từ `@ttm/shared`, lỗi API qua `applyApiErrorToForm`.
+- Hai ô: "Workspace name" (bắt buộc) và "First project (optional)" (`projectName`). Ô project để trống thì chỉ tạo workspace.
+- Toàn bộ form nằm **bên trong `DialogContent`**. `Dialog` chỉ giữ trạng thái `open`, còn `DialogContent` mới là phần được ẩn/hiện.
+- `onOpenChange={(next) => !next && onClose()}`: chỉ gọi `onClose` khi dialog đóng.
 - Nút submit bị disable khi đang gửi.
 - `useCreateWorkspace` (`useMutation`):
   - Thành công: `invalidateQueries({ queryKey: workspaceKeys.list() })`, đóng dialog, reset form, rồi chuyển sang trang chi tiết của workspace vừa tạo.
@@ -105,7 +108,7 @@ Màn hình phải có đủ **4 trạng thái**:
 ## Bước 6: `WorkspaceDetailPage`
 
 - `useWorkspace(id)` lấy dữ liệu từ `GET /workspaces/:workspaceId`. Khi id không hợp lệ thì không gửi request: dùng `enabled: false`, hoặc không render component gọi hook.
-- Hiện tên workspace và badge vai trò. Phần nội dung tạm ghi "Projects will appear here" (Task 7).
+- Hiện tên workspace, badge vai trò và danh sách `projects` (chỉ hiện tên). Không có project thì ghi "No projects yet". Trang danh sách project đầy đủ (tạo, sửa, xoá) thuộc F3 sau Task 7.
 - **API trả 404** (không phải thành viên, hoặc workspace không tồn tại): hiện trạng thái "Workspace not found" kèm link về `/`. Không để trang trắng hay rơi vào `RouteErrorPage`.
 - **Giao diện theo vai trò:** chỉ ADMIN thấy nút "Settings" (tạm thời `disabled`). Đây chỉ là che giao diện; backend vẫn phải kiểm tra quyền ở mọi API.
 
@@ -118,6 +121,8 @@ Màn hình phải có đủ **4 trạng thái**:
 | 3   | Tắt backend, reload `/`                      | Thấy thông báo lỗi và nút "Try again". Bật backend, bấm nút thì tải được                   |
 | 4   | Tạo workspace tên để trống                   | Lỗi hiện dưới ô name, không gửi request                                                    |
 | 5   | Tạo workspace "Team A"                       | Dialog đóng, chuyển sang trang chi tiết. Quay về `/` thấy "Team A" **mà không cần reload** |
+| 5b  | Tạo "Team P" với project "Website"           | Trang chi tiết hiện project "Website"; card ở `/` ghi 1 project                            |
+| 5c  | Tải lại `/` trước khi mở dialog              | Dialog **không** hiện cho tới khi bấm "Create workspace"                                   |
 | 6   | Bấm 2 lần thật nhanh vào nút tạo             | Chỉ có 1 request `POST /workspaces`                                                        |
 | 7   | Mở dialog, bấm Esc                           | Dialog đóng, focus quay lại nút "Create workspace"                                         |
 | 8   | Ctrl+Click vào một card                      | Mở trang chi tiết ở tab mới                                                                |

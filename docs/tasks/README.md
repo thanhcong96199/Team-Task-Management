@@ -11,6 +11,8 @@ File này theo dõi các task của dự án. Mỗi task lớn có một file y�
 
 ## Tiến độ
 
+> **Lộ trình mới (2026-10-19):** các task đã được gộp và đánh số lại trong [roadmap.md](roadmap.md). Theo dõi tiến độ ở đó; bảng dưới đây giữ lại để tham chiếu số task cũ.
+
 ### Backend
 
 | Task  | Nội dung                                                    | Trạng thái                                                  |
