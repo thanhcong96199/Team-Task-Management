@@ -26,11 +26,11 @@ Làm trước, rồi commit riêng. Các mục đã xong được đánh dấu t
 
 Mọi response thành công có dạng `{ data: ... }`. Dùng `unwrap` như `features/auth/api.ts`.
 
-| Gọi                            | Thành công                    | Lỗi cần xử lý ở UI                              |
-| ------------------------------ | ----------------------------- | ----------------------------------------------- |
-| `GET /workspaces`              | `200`, `WorkspaceSummary[]`   | Mạng/500 → trạng thái lỗi                       |
-| `POST /workspaces` `{ name, projectName? }` | `201`, `WorkspaceSummary` | `400` → `fieldErrors` hiện dưới ô nhập tương ứng |
-| `GET /workspaces/:workspaceId` | `200`, `WorkspaceDetail` (có `projects`) | `404` → "Workspace not found"; `400` → như 404  |
+| Gọi                                         | Thành công                               | Lỗi cần xử lý ở UI                               |
+| ------------------------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `GET /workspaces`                           | `200`, `WorkspaceSummary[]`              | Mạng/500 → trạng thái lỗi                        |
+| `POST /workspaces` `{ name, projectName? }` | `201`, `WorkspaceSummary`                | `400` → `fieldErrors` hiện dưới ô nhập tương ứng |
+| `GET /workspaces/:workspaceId`              | `200`, `WorkspaceDetail` (có `projects`) | `404` → "Workspace not found"; `400` → như 404   |
 
 - Kiểu `WorkspaceSummary`, `WorkspaceDetail`, `WorkspaceRole`, `CreateWorkspaceInput` và `createWorkspaceSchema`, `workspaceParamsSchema` đều import từ `@ttm/shared`. **Không tự khai báo lại kiểu ở UI.**
 - `error` trong `useQuery` có kiểu `ApiError`, nên kiểm tra `error.status === 404` trực tiếp. `queryClient` đã tắt retry cho 404, nên trang "not found" hiện ngay.

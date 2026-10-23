@@ -17,7 +17,9 @@ const route = createBrowserRouter([
                 path: "/",
 
                 lazy: async () => {
-                  const ListWorkspace = (await import("../features/workspace/page/WorkspaceListPage")).default;
+                  const ListWorkspace = (
+                    await import("../features/workspace/page/WorkspaceListPage")
+                  ).default;
                   return { Component: ListWorkspace };
                 },
               },
@@ -25,7 +27,9 @@ const route = createBrowserRouter([
                 path: "/workspaces/:workspaceId",
 
                 lazy: async () => {
-                  const WorkspaceDetail = (await import("../features/workspace/page/WorkspaceDetailPage")).default;
+                  const WorkspaceDetail = (
+                    await import("../features/workspace/page/WorkspaceDetailPage")
+                  ).default;
                   return { Component: WorkspaceDetail };
                 },
               },

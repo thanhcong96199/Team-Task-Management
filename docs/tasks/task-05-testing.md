@@ -16,12 +16,12 @@ Có hạ tầng test chạy được ở máy và trong CI, kèm test cho phần
 
 ### Các loại test
 
-| Loại        | Kiểm tra cái gì                                  | Ví dụ trong dự án                              | Tốc độ |
-| ----------- | ------------------------------------------------ | ---------------------------------------------- | ------ |
-| Unit        | Một hàm thuần, không gọi DB hay mạng             | `toSummary()`, schema zod, `applyApiErrorToForm` | Rất nhanh |
-| Integration | Nhiều phần chạy cùng nhau                        | Gọi `POST /workspaces` qua Express + Prisma + DB thật | Vừa |
-| Component   | Một component React render và phản hồi thao tác  | `CreateWorkspaceDialog` hiện lỗi khi để trống tên | Nhanh |
-| E2E         | Cả hệ thống qua trình duyệt thật                 | Đăng nhập → tạo workspace (Playwright)          | Chậm   |
+| Loại        | Kiểm tra cái gì                                 | Ví dụ trong dự án                                     | Tốc độ    |
+| ----------- | ----------------------------------------------- | ----------------------------------------------------- | --------- |
+| Unit        | Một hàm thuần, không gọi DB hay mạng            | `toSummary()`, schema zod, `applyApiErrorToForm`      | Rất nhanh |
+| Integration | Nhiều phần chạy cùng nhau                       | Gọi `POST /workspaces` qua Express + Prisma + DB thật | Vừa       |
+| Component   | Một component React render và phản hồi thao tác | `CreateWorkspaceDialog` hiện lỗi khi để trống tên     | Nhanh     |
+| E2E         | Cả hệ thống qua trình duyệt thật                | Đăng nhập → tạo workspace (Playwright)                | Chậm      |
 
 **Dự án này tập trung vào integration test cho backend và component test cho frontend.** Đây là hai loại cho nhiều giá trị nhất: chúng kiểm tra đúng hành vi mà người dùng hoặc client nhìn thấy, và không vỡ khi bạn đổi cách viết code bên trong. E2E để sau, nếu còn thời gian.
 
@@ -174,6 +174,7 @@ Chạy `npm run test:db` một lần, sau đó `npm test -w server`. Thấy 2 te
 Mỗi dòng là một `it(...)`. Tự viết, nhờ review khi xong.
 
 **Auth** (`auth.test.ts`)
+
 - [ ] Register thành công → 201, response **không** chứa `password`.
 - [ ] Register trùng email → 409.
 - [ ] Register thiếu email → 400, lỗi ở field `email`.
@@ -186,6 +187,7 @@ Mỗi dòng là một `it(...)`. Tự viết, nhờ review khi xong.
 Gợi ý cho cookie: lấy `res.headers["set-cookie"]` từ response login, rồi gửi lại bằng `.set("Cookie", cookies)`.
 
 **Workspace** (`workspace.test.ts`)
+
 - [ ] `POST` → 201, `role: "ADMIN"`, `memberCount: 1`, `projectCount: 0`.
 - [ ] `POST` với `name: "   "` → 400.
 - [ ] `POST` kèm `projectName` → `projectCount: 1`, và `GET` chi tiết có project đó.
@@ -196,11 +198,13 @@ Gợi ý cho cookie: lấy `res.headers["set-cookie"]` từ response login, rồ
 - [ ] Workspace đã xoá mềm: không có trong danh sách, chi tiết → 404. (Dùng `prisma.workspace.update` trực tiếp trong test để gán `deletedAt`.)
 
 **Unit test** (không cần DB)
+
 - [ ] `createWorkspaceSchema`: tên rỗng sau `trim` thì fail, tên 101 ký tự thì fail, `projectName` bỏ trống thì pass.
 
 ### Bước 1.8: Kiểm tra test có thật sự bắt lỗi
 
 Thử lần lượt các thay đổi dưới đây, chạy test, thấy đỏ thì hoàn tác:
+
 - Trong `requireWorkspaceMember`, đổi `404` thành `403`.
 - Bỏ điều kiện `deletedAt` khi kiểm tra thành viên.
 - Trong `createWorkspace`, bỏ phần tạo member ADMIN.
@@ -319,7 +323,14 @@ describe("WorkspaceListPage", () => {
       http.get("/api/v1/workspaces", () =>
         HttpResponse.json({
           data: [
-            { id: 1, name: "Team A", role: "ADMIN", memberCount: 1, projectCount: 0, createdAt: "2026-10-19T00:00:00.000Z" },
+            {
+              id: 1,
+              name: "Team A",
+              role: "ADMIN",
+              memberCount: 1,
+              projectCount: 0,
+              createdAt: "2026-10-19T00:00:00.000Z",
+            },
           ],
         }),
       ),
@@ -335,6 +346,7 @@ describe("WorkspaceListPage", () => {
 ### Cách tìm phần tử: ưu tiên như người dùng nhìn thấy
 
 Thứ tự ưu tiên của Testing Library:
+
 1. `getByRole("button", { name: /create workspace/i })`: giống cách trình đọc màn hình thấy. **Dùng cái này nhiều nhất.**
 2. `getByLabelText(/workspace name/i)`: cho ô nhập.
 3. `getByText(...)`: cho đoạn chữ.
@@ -342,11 +354,11 @@ Thứ tự ưu tiên của Testing Library:
 
 Nếu `getByRole` không tìm được nút hay ô nhập của bạn, thường là do **accessibility của component có vấn đề** (thiếu label, dùng `div` thay cho `button`). Viết test sẽ phát hiện luôn lỗi này.
 
-| Hàm         | Không tìm thấy thì     | Dùng khi                                  |
-| ----------- | ---------------------- | ----------------------------------------- |
-| `getBy...`  | Throw ngay             | Phần tử phải có sẵn                       |
-| `queryBy...`| Trả `null`             | Kiểm tra phần tử **không** tồn tại        |
-| `findBy...` | Chờ (mặc định 1 giây)  | Phần tử xuất hiện sau khi gọi API         |
+| Hàm          | Không tìm thấy thì    | Dùng khi                           |
+| ------------ | --------------------- | ---------------------------------- |
+| `getBy...`   | Throw ngay            | Phần tử phải có sẵn                |
+| `queryBy...` | Trả `null`            | Kiểm tra phần tử **không** tồn tại |
+| `findBy...`  | Chờ (mặc định 1 giây) | Phần tử xuất hiện sau khi gọi API  |
 
 Thao tác người dùng thì dùng `userEvent`:
 
@@ -359,12 +371,14 @@ await user.type(screen.getByLabelText(/workspace name/i), "Team A");
 ### Bước 2.5: Tự viết các test còn lại
 
 **`WorkspaceListPage`**
+
 - [ ] Đang tải: thấy skeleton. (Gợi ý: handler `await delay()` của MSW.)
 - [ ] Lỗi: handler trả 500 → thấy thông báo lỗi và nút "Try again". Đổi handler thành thành công, bấm nút → thấy dữ liệu.
 - [ ] Rỗng (đã có mẫu).
 - [ ] Có dữ liệu (đã có mẫu): card là link tới `/workspaces/1`, hiện badge vai trò.
 
 **`CreateWorkspaceDialog`**
+
 - [ ] Trước khi bấm "Create workspace": không có dialog (`queryByRole("dialog")` là `null`).
 - [ ] Bấm nút → dialog mở. Bấm Esc → dialog đóng.
 - [ ] Để trống tên, bấm Submit → hiện lỗi dưới ô tên, **không có request nào được gửi** (gợi ý: đếm số lần handler `POST` được gọi).
@@ -372,6 +386,7 @@ await user.type(screen.getByLabelText(/workspace name/i), "Team A");
 - [ ] Thành công → dialog đóng, danh sách có workspace mới.
 
 **`WorkspaceDetailPage`**
+
 - [ ] Route `/workspaces/abc` → "not found", không gọi API.
 - [ ] API trả 404 → "Workspace not found" và link về `/`.
 - [ ] MEMBER không thấy nút "Settings", ADMIN thấy.
@@ -403,15 +418,15 @@ await user.type(screen.getByLabelText(/workspace name/i), "Team A");
 
 ## Tự kiểm tra
 
-| #   | Thao tác                                        | Mong đợi                                         |
-| --- | ----------------------------------------------- | ------------------------------------------------ |
-| 1   | `npm test -w server`                            | Xanh, chạy trên `ttm_test`, DB dev không bị đụng |
-| 2   | Chạy lại lần hai                                | Vẫn xanh (test không phụ thuộc dữ liệu cũ)       |
-| 3   | Chạy riêng một test bằng `it.only`              | Xanh (test độc lập)                              |
-| 4   | Làm các thay đổi ở Bước 1.8                     | Mỗi thay đổi làm ít nhất một test đỏ             |
-| 5   | `npm test -w ui`                                | Xanh                                             |
-| 6   | Xoá `aria-label` hoặc label của một ô nhập      | Test component tương ứng đỏ                      |
-| 7   | Push lên nhánh, mở PR                           | CI chạy test và xanh                             |
+| #   | Thao tác                                   | Mong đợi                                         |
+| --- | ------------------------------------------ | ------------------------------------------------ |
+| 1   | `npm test -w server`                       | Xanh, chạy trên `ttm_test`, DB dev không bị đụng |
+| 2   | Chạy lại lần hai                           | Vẫn xanh (test không phụ thuộc dữ liệu cũ)       |
+| 3   | Chạy riêng một test bằng `it.only`         | Xanh (test độc lập)                              |
+| 4   | Làm các thay đổi ở Bước 1.8                | Mỗi thay đổi làm ít nhất một test đỏ             |
+| 5   | `npm test -w ui`                           | Xanh                                             |
+| 6   | Xoá `aria-label` hoặc label của một ô nhập | Test component tương ứng đỏ                      |
+| 7   | Push lên nhánh, mở PR                      | CI chạy test và xanh                             |
 
 ## Câu hỏi để suy nghĩ
 

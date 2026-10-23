@@ -4,20 +4,20 @@ File này liệt kê **tất cả** task từ đầu tới khi dự án đủ đ
 
 ## Tổng quan
 
-| #   | Task                                              | Gộp từ (bản cũ)           | Trạng thái |
-| --- | ------------------------------------------------- | ------------------------- | ---------- |
-| 1   | Auth backend: register, login, `/me`, refresh, logout | Task 1–5, F1.0         | ✅         |
-| 2   | Workspace API                                     | Task 6                    | ✅         |
-| 3   | Nền tảng frontend và Auth UI                      | F0, F1                    | ✅         |
-| 4   | Workspace UI                                      | F2                        | ⏳         |
-| 5   | Thiết lập test (backend và frontend)              | Task 12 (đưa lên sớm)     | ⬜         |
-| 6   | Thành viên workspace                              | _mới_                     | ⬜         |
-| 7   | Project và Board API                              | Task 7, Task 8            | ⬜         |
-| 8   | Project và Board UI                               | F3, F4                    | ⬜         |
-| 9   | Task và Comment API                               | Task 9, Task 10           | ⬜         |
-| 10  | Kanban, chi tiết task, comment UI                 | F5                        | ⬜         |
-| 11  | Bảo mật, logging, deploy                          | Task 11 + deploy          | ⬜         |
-| 12  | Hoàn thiện để đi phỏng vấn                        | _mới_                     | ⬜         |
+| #   | Task                                                  | Gộp từ (bản cũ)       | Trạng thái |
+| --- | ----------------------------------------------------- | --------------------- | ---------- |
+| 1   | Auth backend: register, login, `/me`, refresh, logout | Task 1–5, F1.0        | ✅         |
+| 2   | Workspace API                                         | Task 6                | ✅         |
+| 3   | Nền tảng frontend và Auth UI                          | F0, F1                | ✅         |
+| 4   | Workspace UI                                          | F2                    | ⏳         |
+| 5   | Thiết lập test (backend và frontend)                  | Task 12 (đưa lên sớm) | ⬜         |
+| 6   | Thành viên workspace                                  | _mới_                 | ⬜         |
+| 7   | Project và Board API                                  | Task 7, Task 8        | ⬜         |
+| 8   | Project và Board UI                                   | F3, F4                | ⬜         |
+| 9   | Task và Comment API                                   | Task 9, Task 10       | ⬜         |
+| 10  | Kanban, chi tiết task, comment UI                     | F5                    | ⬜         |
+| 11  | Bảo mật, logging, deploy                              | Task 11 + deploy      | ⬜         |
+| 12  | Hoàn thiện để đi phỏng vấn                            | _mới_                 | ⬜         |
 
 **Vì sao đưa test (5) lên sớm:** viết test cho Task 2 (workspace) trước, rồi mọi task sau đều kèm test ngay khi làm. Viết test dồn ở cuối thì rất nặng và dễ bỏ.
 
@@ -56,6 +56,7 @@ File chi tiết: [task-05-testing.md](task-05-testing.md).
 **Mục tiêu:** có hạ tầng test chạy được trong CI, và test cho phần auth và workspace đã làm.
 
 ### Backend (vitest + supertest)
+
 - Cài `vitest`, `supertest`. Tách `app.ts` (export app) khỏi `server.ts` (listen) nếu chưa tách.
 - Dùng **database riêng cho test** (`.env.test`, `DATABASE_URL` khác). Chạy `prisma migrate reset --force` trước bộ test, xoá dữ liệu giữa các test.
 - Helper: `createUser()`, `loginAs(user)` trả về access token.
@@ -64,11 +65,13 @@ File chi tiết: [task-05-testing.md](task-05-testing.md).
   - Workspace: toàn bộ bảng tự kiểm tra của Task 6 (B không xem được workspace của A, `abc` → 400, xoá mềm → 404, tạo kèm project).
 
 ### Frontend (vitest + Testing Library + MSW)
+
 - Cài `@testing-library/react`, `@testing-library/user-event`, `msw`.
 - Test `WorkspaceListPage`: 4 trạng thái (dùng MSW giả lập response chậm, lỗi, rỗng, có dữ liệu).
 - Test `CreateWorkspaceDialog`: để trống tên → hiện lỗi, không gửi request; lỗi 400 từ server → hiện dưới ô nhập.
 
 ### CI
+
 - Thêm bước `npm test` vào `.github/workflows/ci.yml`. Backend cần service Postgres trong CI.
 
 **Câu hỏi:** Vì sao test API dùng database thật thay vì mock Prisma? Khi nào mock thì hợp lý?
@@ -79,14 +82,15 @@ File chi tiết: [task-05-testing.md](task-05-testing.md).
 
 **Mục tiêu:** ADMIN thêm, đổi vai trò, xoá thành viên. Mọi thành viên xem được danh sách.
 
-| Method   | URL                                     | Quyền      | Kết quả                                    |
-| -------- | --------------------------------------- | ---------- | ------------------------------------------ |
-| `GET`    | `/workspaces/:id/members`               | Thành viên | `200`, `{ userId, name, email, role }[]`   |
-| `POST`   | `/workspaces/:id/members` `{ email, role }` | ADMIN  | `201`. Email không tồn tại → `404`; đã là thành viên → `409` |
-| `PATCH`  | `/workspaces/:id/members/:userId` `{ role }` | ADMIN | `200`                                      |
-| `DELETE` | `/workspaces/:id/members/:userId`       | ADMIN      | `204`                                      |
+| Method   | URL                                          | Quyền      | Kết quả                                                      |
+| -------- | -------------------------------------------- | ---------- | ------------------------------------------------------------ |
+| `GET`    | `/workspaces/:id/members`                    | Thành viên | `200`, `{ userId, name, email, role }[]`                     |
+| `POST`   | `/workspaces/:id/members` `{ email, role }`  | ADMIN      | `201`. Email không tồn tại → `404`; đã là thành viên → `409` |
+| `PATCH`  | `/workspaces/:id/members/:userId` `{ role }` | ADMIN      | `200`                                                        |
+| `DELETE` | `/workspaces/:id/members/:userId`            | ADMIN      | `204`                                                        |
 
 Quy tắc nghiệp vụ:
+
 - **Workspace luôn phải còn ít nhất 1 ADMIN.** Không cho hạ quyền hoặc xoá ADMIN cuối cùng → `409`. Kiểm tra và cập nhật trong **một transaction** để hai request đồng thời không cùng lách qua.
 - Thành viên tự rời workspace: `DELETE .../members/me` (cũng phải tuân theo quy tắc ADMIN cuối cùng).
 - Chỉ thêm user đã có tài khoản (chưa làm mời qua email).
@@ -102,12 +106,13 @@ UI: trang "Members" trong workspace (bảng thành viên, dialog thêm, đổi v
 Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project trước, sau đó Board chỉ việc lặp lại khuôn.
 
 ### Project
-| Method   | URL                                         | Quyền      |
-| -------- | ------------------------------------------- | ---------- |
-| `GET`    | `/workspaces/:workspaceId/projects`         | Thành viên |
-| `POST`   | `/workspaces/:workspaceId/projects`         | ADMIN      |
-| `GET`    | `/workspaces/:workspaceId/projects/:projectId` | Thành viên |
-| `PATCH`  | `/workspaces/:workspaceId/projects/:projectId` | ADMIN   |
+
+| Method   | URL                                            | Quyền           |
+| -------- | ---------------------------------------------- | --------------- |
+| `GET`    | `/workspaces/:workspaceId/projects`            | Thành viên      |
+| `POST`   | `/workspaces/:workspaceId/projects`            | ADMIN           |
+| `GET`    | `/workspaces/:workspaceId/projects/:projectId` | Thành viên      |
+| `PATCH`  | `/workspaces/:workspaceId/projects/:projectId` | ADMIN           |
 | `DELETE` | `/workspaces/:workspaceId/projects/:projectId` | ADMIN (xoá mềm) |
 
 - Viết middleware `requireProject` (chạy sau `requireWorkspaceMember`): tìm project theo `projectId` **và** `workspaceId` của URL, chưa xoá; không có → `404`. Gắn `req.project`.
@@ -115,11 +120,13 @@ Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project tr�
 - Danh sách có `boardCount`.
 
 ### Board
+
 - Tương tự, dưới `/projects/:projectId/boards`. Middleware `requireBoard` kiểm tra board thuộc đúng project.
 - Quyền: thành viên tạo và sửa board, ADMIN xoá. (Bạn tự quyết định và ghi lý do vào file chi tiết.)
 - Danh sách có số task theo từng trạng thái (`TODO`, `IN_PROGRESS`, `DONE`), dùng `groupBy` hoặc `_count` có điều kiện, **không N+1**.
 
 ### Dọn dẹp
+
 - Xoá `board.middleware.ts` cũ và `boardParamsSchema` trong `validate.middleware.ts`.
 - **Xoá mềm theo tầng:** xoá project thì board và task bên trong cũng không còn hiện. Chọn một cách: (a) cập nhật `deletedAt` cho cả cây trong một transaction, hoặc (b) chỉ đánh dấu project và mọi query đọc board/task đều lọc theo project cha. Ghi lý do chọn.
 
@@ -142,14 +149,15 @@ Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project tr�
 ## Task 9: Task và Comment API (gộp Task 9 + 10)
 
 ### Task
-| Method   | URL                         | Ghi chú                                         |
-| -------- | --------------------------- | ----------------------------------------------- |
-| `GET`    | `.../boards/:boardId/tasks` | Lọc và phân trang (xem dưới)                    |
-| `POST`   | `.../boards/:boardId/tasks` | `creatorId` lấy từ token                        |
-| `GET`    | `.../tasks/:taskId`         | Kèm assignee, creator, số comment               |
+
+| Method   | URL                         | Ghi chú                                             |
+| -------- | --------------------------- | --------------------------------------------------- |
+| `GET`    | `.../boards/:boardId/tasks` | Lọc và phân trang (xem dưới)                        |
+| `POST`   | `.../boards/:boardId/tasks` | `creatorId` lấy từ token                            |
+| `GET`    | `.../tasks/:taskId`         | Kèm assignee, creator, số comment                   |
 | `PATCH`  | `.../tasks/:taskId`         | Sửa title, description, priority, dueDate, assignee |
-| `PATCH`  | `.../tasks/:taskId/status`  | Đổi trạng thái (dùng cho kéo thả)               |
-| `DELETE` | `.../tasks/:taskId`         | Người tạo hoặc ADMIN                            |
+| `PATCH`  | `.../tasks/:taskId/status`  | Đổi trạng thái (dùng cho kéo thả)                   |
+| `DELETE` | `.../tasks/:taskId`         | Người tạo hoặc ADMIN                                |
 
 - **Lọc:** `status`, `priority`, `assigneeId`, `assignee=me`, `q` (tìm theo title). Query string parse bằng zod (`z.coerce`, `z.enum`).
 - **Phân trang:** `page`, `pageSize` (mặc định 20, tối đa 100). Response `{ data, meta: { page, pageSize, total } }`. Lấy `total` và `data` trong một `prisma.$transaction([...])`.
@@ -157,11 +165,13 @@ Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project tr�
 - Thêm index cần thiết (ví dụ `@@index([boardId, status])`) và giải thích vì sao.
 
 ### Comment
+
 - `GET/POST .../tasks/:taskId/comments`, `PATCH/DELETE .../comments/:commentId`.
 - Chỉ người viết được sửa. Người viết hoặc ADMIN được xoá.
 - Danh sách phân trang theo **cursor** (`cursor`, `limit`), cũ nhất trước. So sánh với phân trang theo `page` ở trên.
 
 **Câu hỏi:**
+
 1. Phân trang offset (`page`) và cursor khác nhau thế nào khi có người thêm dữ liệu trong lúc bạn đang lật trang?
 2. Index `(boardId, status)` giúp query nào? Query nào nó không giúp?
 
@@ -183,6 +193,7 @@ Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project tr�
 ## Task 11: Bảo mật, logging, deploy
 
 ### Bảo mật
+
 - `helmet`, `cors` chỉ cho phép origin của UI (từ env), `credentials: true` vì có cookie.
 - Rate limit cho `/auth/login`, `/auth/register`, `/auth/refresh` (ví dụ `express-rate-limit`).
 - Giới hạn kích thước body (`express.json({ limit: "100kb" })`).
@@ -190,10 +201,12 @@ Project và Board có cùng khuôn mẫu CRUD, nên làm chung. Làm Project tr�
 - Kiểm tra lại: không log mật khẩu hoặc token; response lỗi 500 không lộ stack trace.
 
 ### Logging và health check
+
 - Logger có cấu trúc (`pino`), mỗi request có `requestId`, log thời gian xử lý.
 - `GET /health` (kiểm tra kết nối DB).
 
 ### Deploy
+
 - `Dockerfile` cho server (multi-stage build), `docker-compose.yml` cho local (Postgres + server).
 - Deploy: server và Postgres lên Render/Railway/Fly, UI lên Vercel/Netlify.
 - Chạy `prisma migrate deploy` khi deploy. Env production tách riêng.

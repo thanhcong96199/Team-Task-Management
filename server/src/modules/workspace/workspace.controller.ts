@@ -13,6 +13,7 @@ export const createWorkspace = async (req: Request, res: Response) => {
   const result = await workspaceService.createWorkspace({
     userId: req.user!.id,
     name: req.body.name,
+    projectName: req.body?.projectName
   });
 
   return res.status(201).json({ data: result });

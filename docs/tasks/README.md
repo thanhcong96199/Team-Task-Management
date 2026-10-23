@@ -15,21 +15,21 @@ File này theo dõi các task của dự án. Mỗi task lớn có một file y�
 
 ### Backend
 
-| Task  | Nội dung                                                    | Trạng thái                                                  |
-| ----- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| 1     | Validate body register                                      | ✅                                                          |
-| 2     | Cấu hình env                                                | ✅                                                          |
-| 3     | Login và access token                                       | ✅                                                          |
-| 4     | Middleware `authenticate`, `GET /auth/me`                   | ✅                                                          |
-| 5     | Refresh token (rotation) và logout                          | ✅                                                          |
-| F1.0  | Refresh token trong cookie httpOnly                         | ✅                                                          |
-| 6     | Workspace: danh sách, tạo mới, xem chi tiết, phân quyền     | ✅ [task-06-workspace-api.md](task-06-workspace-api.md)     |
-| 7     | Project trong workspace                                     | ⬜                                                          |
-| 8     | Board trong project                                         | ⬜                                                          |
-| 9     | Task: CRUD, lọc theo status/assignee, đổi status            | ⬜                                                          |
-| 10    | Comment                                                     | ⬜                                                          |
-| 11    | Bảo mật: helmet, cors, rate limit, dọn bảng RefreshToken    | ⬜                                                          |
-| 12    | Test (vitest, supertest)                                    | ⬜                                                          |
+| Task | Nội dung                                                 | Trạng thái                                              |
+| ---- | -------------------------------------------------------- | ------------------------------------------------------- |
+| 1    | Validate body register                                   | ✅                                                      |
+| 2    | Cấu hình env                                             | ✅                                                      |
+| 3    | Login và access token                                    | ✅                                                      |
+| 4    | Middleware `authenticate`, `GET /auth/me`                | ✅                                                      |
+| 5    | Refresh token (rotation) và logout                       | ✅                                                      |
+| F1.0 | Refresh token trong cookie httpOnly                      | ✅                                                      |
+| 6    | Workspace: danh sách, tạo mới, xem chi tiết, phân quyền  | ✅ [task-06-workspace-api.md](task-06-workspace-api.md) |
+| 7    | Project trong workspace                                  | ⬜                                                      |
+| 8    | Board trong project                                      | ⬜                                                      |
+| 9    | Task: CRUD, lọc theo status/assignee, đổi status         | ⬜                                                      |
+| 10   | Comment                                                  | ⬜                                                      |
+| 11   | Bảo mật: helmet, cors, rate limit, dọn bảng RefreshToken | ⬜                                                      |
+| 12   | Test (vitest, supertest)                                 | ⬜                                                      |
 
 ### Frontend
 
