@@ -1,10 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import z from "zod";
 
-export const boardParamsSchema = z.object({
-  boardId: z.coerce.number().int().positive(),
-});
-
 export const validateParams =
   (schema: z.ZodType) => (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.params);

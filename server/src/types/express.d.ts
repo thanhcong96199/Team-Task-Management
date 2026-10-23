@@ -5,6 +5,8 @@ declare global {
     interface Request {
       user?: { id: number; email: string };
       membership?: { workspaceId: number; role: WorkspaceRole };
+      project?: { projectId: number; name?: string; description?: string };
+      board?: { boardId: number; name?: string };
     }
   }
 }
