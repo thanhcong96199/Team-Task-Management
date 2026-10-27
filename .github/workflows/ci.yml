@@ -12,6 +12,27 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+
+    # Throwaway Postgres for the server tests. The name must match the guard in server/test/setup.ts.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: test_taskflow
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    # server/.env.test is gitignored, so CI provides the same variables here.
+    # These are test-only values, not real secrets.
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/test_taskflow
+      JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters
+      JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,26 +42,40 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
         id: install
+        run: npm ci
 
       - name: Generate Prisma Client
         working-directory: server
         run: npx prisma generate
-        env:
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
+      # server and ui import @ttm/shared from its dist folder
+      - name: Build shared package
+        id: shared
+        run: npm run build:shared
+
+      # Each check runs even if the previous one failed, so one CI run reports every problem
       - name: Format
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run format
+        run: npm run format:check
 
       - name: Lint
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run lint
 
       - name: Typecheck
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.shared.outcome == 'success' }}
         run: npm run typecheck
 
+      - name: Migrate test database
+        if: ${{ !cancelled() && steps.shared.outcome == 'success' }}
+        working-directory: server
+        run: npx prisma migrate deploy
+
+      - name: Test
+        if: ${{ !cancelled() && steps.shared.outcome == 'success' }}
+        run: npm test
+
       - name: Build
+        if: ${{ !cancelled() && steps.shared.outcome == 'success' }}
         run: npm run build
