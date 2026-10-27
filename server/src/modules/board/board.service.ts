@@ -81,8 +81,8 @@ export const boardService = {
       select: {
         id: true,
         active: true,
-        title: true
-      }
+        title: true,
+      },
     });
 
     return result;

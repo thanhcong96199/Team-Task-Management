@@ -84,4 +84,18 @@ export const workspaceService = {
 
     return { ...toSummary(workspace, membership.role), projects: workspace.projects };
   },
+
+  async removeWorkspace(membership: { workspaceId: number }) {
+    const workspace = await prisma.workspace.update({
+      where: { id: membership.workspaceId, deletedAt: null },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    if (!workspace) {
+      throw new AppError(404, "Workspace not found");
+    }
+    return workspace;
+  },
 };

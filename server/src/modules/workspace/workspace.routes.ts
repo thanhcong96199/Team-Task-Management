@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { allWorkspaces, createWorkspace, workspaceDetail } from "./workspace.controller.js";
+import {
+  allWorkspaces,
+  createWorkspace,
+  removeWorkspace,
+  workspaceDetail,
+} from "./workspace.controller.js";
 import { authenticate } from "../../middlewares/auth.middleware.js";
 import { validateBody } from "../../middlewares/validate.middleware.js";
 import { createWorkspaceSchema } from "@ttm/shared";
@@ -11,5 +16,6 @@ workspaceRouter.use(authenticate);
 workspaceRouter.get("/", allWorkspaces);
 workspaceRouter.post("/", validateBody(createWorkspaceSchema), createWorkspace);
 workspaceRouter.get("/:workspaceId", requireWorkspaceMember(), workspaceDetail);
+workspaceRouter.delete("/:workspaceId", requireWorkspaceMember(), removeWorkspace);
 
 export default workspaceRouter;

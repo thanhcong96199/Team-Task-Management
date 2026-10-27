@@ -43,7 +43,7 @@ boardRouter.get(
   requireWorkspaceMember(),
   requireProject(),
   requireBoard(),
-  
+
   getAllTaskOfBoard,
 );
 

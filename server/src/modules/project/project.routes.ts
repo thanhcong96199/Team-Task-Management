@@ -22,7 +22,13 @@ projectRouter.post(
   createProject,
 );
 projectRouter.get("/:projectId", requireWorkspaceMember(), requireProject(), detailProject);
-projectRouter.patch("/:projectId", requireWorkspaceMember("ADMIN"), requireProject(), validateBody(updateProjectSchema), editProject);
+projectRouter.patch(
+  "/:projectId",
+  requireWorkspaceMember("ADMIN"),
+  requireProject(),
+  validateBody(updateProjectSchema),
+  editProject,
+);
 projectRouter.delete(
   "/:projectId",
   requireWorkspaceMember("ADMIN"),

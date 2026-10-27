@@ -1,14 +1,18 @@
 import { Button } from "@/shared/ui/button";
+import { Link } from "react-router";
 
 type WorkspaceError = {
   messageError: string;
-  onRefresh: () => void;
+  backTo?: string;
+  actionLabel?: string;
+  onRetry?: () => void;
 };
-export const WorkspaceError = ({ messageError, onRefresh }: WorkspaceError) => {
+export const WorkspaceError = ({ messageError, backTo, actionLabel, onRetry }: WorkspaceError) => {
   return (
     <div>
       <p>{messageError}</p>
-      <Button onClick={onRefresh}>Try again</Button>
+      {!backTo && onRetry && <Button onClick={onRetry}>Try again</Button>}
+      {backTo && <Link to={`${backTo}`}>{actionLabel}</Link>}
     </div>
   );
 };

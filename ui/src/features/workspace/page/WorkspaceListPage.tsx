@@ -17,7 +17,7 @@ const WorkspaceListPage = () => {
   if (isLoading) {
     return <SkeletonCard />;
   } else if (isError) {
-    return <WorkspaceError messageError="Something error" onRefresh={refetch} />;
+    return <WorkspaceError messageError="Something error" onRetry={refetch} />;
   }
   return (
     <div>

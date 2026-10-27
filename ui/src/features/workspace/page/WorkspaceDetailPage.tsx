@@ -6,12 +6,23 @@ import { Card, CardHeader, CardTitle } from "@/shared/ui/card";
 
 const WorkspaceDetailPage = () => {
   const params = useParams();
+
   const workspaceId = Number(params?.workspaceId);
-  const { data, isLoading, isError, refetch } = useWorkspaceDetail(workspaceId);
+  const { data, isLoading, isError, error, refetch } = useWorkspaceDetail(workspaceId);
+
   if (isLoading) {
     return <SkeletonCard />;
   } else if (isError) {
-    return <WorkspaceError messageError="Something error" onRefresh={refetch} />;
+    if (error.status === 404) {
+      return (
+        <WorkspaceError
+          messageError="Workspace not found"
+          backTo="/"
+          actionLabel="Go back to workspace list page"
+        />
+      );
+    }
+    return <WorkspaceError messageError="Something went wrong" onRetry={refetch} />;
   }
   return (
     <div>
