@@ -5,13 +5,14 @@ import { requireProject } from "../project/project.middleware.js";
 import {
   allBoardOfProject,
   createBoardOfProject,
+  createTaskForBoard,
   editBoardOfProject,
   getAllTaskOfBoard,
   removeBoardOfProject,
 } from "./board.controller.js";
-import { requireBoard } from "./board.middleware.js";
+import { requireBoard, validateAssigneeTask } from "./board.middleware.js";
 import { validateBody } from "../../middlewares/validate.middleware.js";
-import { createBoardSchema, updateBoardSchema } from "@ttm/shared";
+import { createBoardSchema, updateBoardSchema, createTaskForBoardSchema } from "@ttm/shared";
 
 const boardRouter = Router({ mergeParams: true });
 boardRouter.use(authenticate);
@@ -43,8 +44,16 @@ boardRouter.get(
   requireWorkspaceMember(),
   requireProject(),
   requireBoard(),
-
   getAllTaskOfBoard,
+);
+boardRouter.post(
+  "/:boardId/tasks",
+  requireWorkspaceMember(),
+  requireProject(),
+  requireBoard(),
+  validateBody(createTaskForBoardSchema),
+  validateAssigneeTask(),
+  createTaskForBoard,
 );
 
 export default boardRouter;

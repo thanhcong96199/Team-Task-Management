@@ -1,5 +1,5 @@
 import { prisma } from "../../config/database.js";
-import type { TaskStatus } from "../../generated/prisma/enums.js";
+import type { TaskStatus, TaskPriority } from "../../generated/prisma/enums.js";
 import { AppError } from "../../utils/app-error.js";
 type BoardItemCreate = {
   title: string;
@@ -29,6 +29,17 @@ type ParamAllTask = {
 };
 
 type TaskCounts = Record<TaskStatus, number>;
+
+type BodyCreateTaskBoard = {
+  creatorId: number;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assigneeId: number;
+  boardId: number;
+  description: string;
+  comment?: string;
+};
 
 // New object on every call: boards must not share one counts object
 const emptyTaskCounts = (): TaskCounts => ({
@@ -125,9 +136,8 @@ export const boardService = {
   },
   async getAllTask(input: ParamAllTask) {
     const { boardId, projectId, status } = input;
-    const result = await prisma.board.findMany({
+    const result = await prisma.board.findUnique({
       where: { id: boardId, projectId: projectId, deletedAt: null },
-      orderBy: { createdAt: "desc" },
       select: {
         _count: {
           select: {
@@ -138,9 +148,34 @@ export const boardService = {
         },
         tasks: {
           where: { deletedAt: null, status: status },
+          orderBy: { createdAt: "desc" },
           select: { id: true, title: true, status: true },
         },
       },
+    });
+    return result;
+  },
+  async createTaskForBoard(input: BodyCreateTaskBoard) {
+    const { boardId, title, creatorId, status, priority, assigneeId, description, comment } = input;
+    const result = await prisma.task.create({
+      data: {
+        title: title,
+        status: status,
+        priority: priority,
+        assigneeId: assigneeId,
+        creatorId: creatorId,
+        boardId: boardId,
+        description: description,
+        ...(comment && {
+          comments: {
+            create: {
+              content: comment,
+              userId: creatorId,
+            },
+          },
+        }),
+      },
+      select: { id: true, title: true, description: true, comments: true, assigneeId: true },
     });
     return result;
   },

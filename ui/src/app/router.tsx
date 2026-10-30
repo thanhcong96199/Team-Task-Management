@@ -33,6 +33,23 @@ const route = createBrowserRouter([
                   return { Component: WorkspaceDetail };
                 },
               },
+              {
+                path: "/workspaces/:workspaceId/:projectId",
+                lazy: async () => {
+                  const ProjectDetail = (await import("../features/project/page/ProjectDetail"))
+                    .default;
+                  return { Component: ProjectDetail };
+                },
+              },
+              {
+                path: "/workspaces/:workspaceId/:projectId/boards/:boardId",
+                lazy: async () => {
+                  const TaskOfProject = (
+                    await import("../features/project/page/TaskBoardOfProject")
+                  ).default;
+                  return { Component: TaskOfProject };
+                },
+              },
             ],
           },
         ],

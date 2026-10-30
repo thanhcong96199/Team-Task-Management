@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { boardService } from "./board.service.js";
-import type { TaskStatus } from "../../generated/prisma/enums.js";
+import type { TaskStatus, TaskPriority } from "../../generated/prisma/enums.js";
 
 export const allBoardOfProject = async (req: Request, res: Response) => {
   const result = await boardService.getAllBoard(req.project!.projectId);
@@ -44,4 +44,19 @@ export const getAllTaskOfBoard = async (req: Request, res: Response) => {
   });
 
   return res.status(200).json({ data: result });
+};
+
+export const createTaskForBoard = async (req: Request, res: Response) => {
+  const result = await boardService.createTaskForBoard({
+    creatorId: req.user!.id,
+    boardId: req.board!.boardId,
+    title: req.body.title,
+    status: req.body.status as TaskStatus,
+    priority: req.body.priority as TaskPriority,
+    assigneeId: req.body.assigneeId,
+    description: req.body.description,
+    comment: req.body.comment,
+  });
+
+  return res.status(201).json({ data: result });
 };
